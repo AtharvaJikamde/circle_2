@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circles - 2</title>
+    <style>
+        body {
+            margin: 0px;
+        }
+        .canvas {
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <div id="canva"></div>
+    <script>
+        (function () {
+            function Circle(x, y, radius, color, velocity) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.color = color;
+                this.velocity = velocity;
+                this.timeToLive = randomIntFromRange(100, 200);
+                this.rgba = this.color.split("rgba")[1]
+                    .split("(")[1]
+                    .split(")")[0]
+                    .split(", ");
+                this.alpha = 0.05;
+            }
+            Circle.prototype = {
+                draw: function () {
+                    c.globalAlpha = this.alpha;
+                    c.strokeStyle = this.color;
+                    c.save();
+                    c.beginPath();
+                    c.arc(this.x, this.y, this.radius, 0, 2 * 3.14159, false);
+                    c.stroke();
+                    c.closePath();
+                    c.restore();
+                },
+                update: function () {
+                    this.x += this.velocity.x;
+                    this.y += this.velocity.y;
+                    this.timeToLive -= 1;
+                    this.draw();
+                    if (this.timeToLive < 150) {
+                        this.alpha -= 0.1;
+                    }
+                }
+            };
+            const canvas = document.createElement("canvas");
+            const c = canvas.getContext("2d");
+            const interact = { x: undefined, y: undefined };
+            const circles = [];
+            canvas.className = "canvas";
+            function randomFromRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+            function randomIntFromRange(min, max) {
+                return Math.floor(randomFromRange(min, max));
+            }
+            function mouseEvents(event) {
+                if (event.type === "mouseout") {
+                    interact.x = undefined;
+                    interact.y = undefined;
+                } else {
+                    interact.x = event.pageX;
+                    interact.y = event.pageY;
+                }
+            }
+            function touchEvents(event) {
+                if (event.type === "touchend") {
+                    interact.x = undefined;
+                    interact.y = undefined;
+                } else {
+                    interact.x = event.touches[0].pageX;
+                    interact.y = event.touches[0].pageY;
+                }
+            }
+            function spawnCircle(x, y, n) {
+                for (let index = 0; index < n; index++) {
+                    const radius = 25;
+                    const velocity = {
+                        x: randomFromRange(-2, 2),
+                        y: randomFromRange(-2, 2)
+                    };
+                    const colors = ["rgba(150, 50, 50, 0.5)", "rgba(50, 150, 50, 0.5)"];
+                    const color = colors[randomIntFromRange(0, colors.length)]
+                    circles.push(
+                        new Circle(x, y, radius, color, velocity)
+                    );
+                }
+            }
+            function onResize() {
+                canvas.width = document.documentElement.clientWidth;
+                canvas.height = document.documentElement.clientHeight;
+            }
+            function animate() {
+                window.requestAnimationFrame(animate);
+                c.fillStyle = "black";
+                c.fillRect(0, 0, canvas.width, canvas.height);
+                for (let index = 0; index < circles.length; index++) {
+                    const circle = circles[index];
+                    circle.update();
+                    if (circle.timeToLive <= 0) circles.splice(circle, 1);
+                }
+                if (interact.x !== undefined) spawnCircle(interact.x, interact.y, 25);
+            }
+            onResize();
+            animate();
+            window.addEventListener("mousemove", mouseEvents, false);
+            window.addEventListener("mouseover", mouseEvents, false);
+            window.addEventListener("mouseout", mouseEvents, false);
+            window.addEventListener("touchstart", touchEvents, false);
+            window.addEventListener("touchmove", touchEvents, false);
+            window.addEventListener("touchend", touchEvents, false);
+            window.addEventListener("resize", onResize, false);
+            const canv = document.getElementById("canva");
+            canv.insertBefore(canvas, canv.childNodes[0]);
+        }).call(window);
+    </script>
+</body>
+</html>
